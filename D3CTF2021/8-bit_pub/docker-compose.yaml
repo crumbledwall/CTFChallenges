@@ -1,0 +1,21 @@
+version: "3"
+services:
+  web:
+    container_name: "8-bit-pub-web"
+    build: .
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - database
+
+  database:
+    container_name: "8-bit-pub-db"
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "365b46bf78edcfa0650c99e4f8e0336a"
+      MYSQL_DATABASE: "8-bit-pub"
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --sql-mode=''
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql:ro

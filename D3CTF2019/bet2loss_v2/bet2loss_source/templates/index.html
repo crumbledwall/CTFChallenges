@@ -1,0 +1,253 @@
+<html>
+
+<head>
+    <title>bet2loss_v2</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+</head>
+
+<body>
+    <div>
+        <div class="logo"><img src="https://i.loli.net/2019/10/24/45BRzCgmsXwfthv.png" id="logo"></div>
+        <div class="bord">
+            1. This game is deployed on Ropsten.</br>
+            2. Everybody has 0 B2GB in the beginning. But once you try to make a bet for the first time, you will gain
+            1000 B2GBs in the way of so called "airdrop". Then, your balance will be substracted your first wager.</br>
+            3. click "deploy" to get your own contract address, and click "redeploy" to change it.</br>
+            4. Game rule:</br>
+            (1) select a modulo (2 ~ 100)</br>
+            (2) guess a number (0 ~ (modulo-1))</br>
+            (3) set a wager for your bet (should be less than 1000)</br>
+            (4) let the dice roll!</br>
+            If you win, you will gain (wager * modulo) B2GBs.</br>
+            4.For example: set modulo=2, guess 1, and bet 100 B2GB, if (1 == random_number % modulo), you will get
+            100*2=200 B2GBs.</br>
+            5. You can click the "pay for flag" once balanceOf(you) > 300000, and then, click "show my flag" to get
+            your own flag.</br>
+            6. For each newly deployed contracts you can only make your bet for 16 times.</br>
+
+            P.S. You need to install an ETH wallet first, for instance, metamask in chrome.</br>
+            P.P.S. Surely you need some test-eth to pay for gasprice.</br>
+            P.P.P.S. You can get your test-eth from eather faucets (e.g. https://faucet.metamask.io/)</br>
+        </div>
+
+
+
+
+        <div class="bottom-panel">
+            <div class="contract">
+                <div id="info"></div>
+                <div class="btn-group" role="group">
+                    <button type="button" id="pay" class="btn btn-primary btn-lg">pay for flag</button>
+                    <button type="button" id="show" class="btn btn-primary btn-lg">show my flag</button>
+                </div>
+
+            </div>
+            <div class="form">
+                <form role="form">
+                    <div class="input-panel">
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="modulo" placeholder="Modulo(2-100):">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="betnumber"
+                                placeholder="Bet Number(0-(modulo-1)):">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="wager" placeholder="Bet Wager(1-1000):">
+                        </div>
+                    </div>
+                    <button type="button" id="bet" class="btn btn-primary btn-lg">make a bet</button>
+                </form>
+            </div>
+            <div id="result"></div>
+
+        </div>
+
+        <div>
+            <script src="{% static 'web3.min.js' %}"></script>
+            <script src="{% static 'bet2loss_abi.js' %}"></script>
+            <script>
+
+                var Bet2loss;
+                var Bet2lossInstance;
+                var web3js;
+                var account;
+
+                function GetBalance() {
+                    userAccount = account[0];
+                    Bet2lossInstance.methods.balanceOf(userAccount).call().then(function (result) {
+                        updateBalance(result);
+                    }).catch(async function (err) {
+                        $("div#infopanel").html("<p>The contract is pending...</p>");
+                    })
+                }
+                function updateBalance(balance) {
+                    //language=JQuery-CSS
+                    $("div#infopanel").html("<b>contract address:</b>" + contractAddress + "<br><b>your balance:</b>" + balance);
+                }
+
+                function createTxns(modulo, wager, betnumber, commitlastblock, commit, r, s, v, gasprice) {
+                    $("div#result").text("Just waiting...");
+                    userAccount = account[0];
+
+                    Bet2lossInstance.methods.placeBet(betnumber, modulo, wager, commitlastblock, commit, r, s, v).send({ from: userAccount })
+                        .on("receipt", function (receipt) {
+                            $("div#result").text("Bet success, waiting to setbettle...");
+                            $.post("setbettle", { commit: commit }).done(function (data) {
+                                $("div#result").text(data);
+                                setTimeout("GetBalance()", 3000);
+                            })
+                        }).on("error", function (error) {
+                            // Do something to alert the user their transaction has failed
+                            $("div#result").text("Something error, maybe try again...");
+                        }
+                        );
+                }
+                function checkContract() {
+                    $.get("deploy?first", function (data) {
+                        contractAddress = data['address'];
+                        if (contractAddress) {
+                            $("div#info").html("<input type=\"text\" class=\"form-control\" id=\"code\" placeholder=\"\"><div class=\"contractinfo\"><div id=\"infopanel\"></div><button type=\"button\" id=\"deploy\" class=\"redeploy btn btn-primary btn-lg\">redeploy</button></div>");
+                            $.get("code", function (data) {
+                                $("input#code")[0].placeholder = 'Code: md5(code)[:6] == ' + data['code'];
+                            });
+                            startApp(contractAddress);
+			    GetBalance();
+                        } else {
+                            $("div#info").html("<div class=\"deploy\"><input type=\"text\" class=\"form-control\" id=\"code\" placeholder=\"\"><button type=\"button\" id=\"deploy\" class=\"btn btn-primary btn-lg\">deploy</button>Click to deploy your own contract</div>");
+                            $.get("code", function (data) {
+                                $("input#code")[0].placeholder = 'Code: md5(code)[:6] == ' + data['code'];
+                            });
+                            GetBalance();
+                        }
+                    });
+                }
+                function startApp(Bet2lossAddress) {
+                    if (typeof interval != 'undefined') {
+                        clearInterval(interval);
+                    }
+                    Bet2lossInstance = new web3js.eth.Contract(Bet2lossABI, Bet2lossAddress);
+                    interval = setInterval(function () {
+                        GetBalance();
+                    }, 1000);
+                }
+
+                window.addEventListener('load', async () => {
+
+                    // 检查web3是否已经注入到(Mist/MetaMask)
+                    if (window.ethereum) {
+                        web3js = new Web3(ethereum);
+                        try {
+                            // Request account access if needed
+                            account = await ethereum.enable();
+                            // Acccounts now exposed
+                        } catch (error) {
+                            alert("you must install MetaMask and then join game!!");
+                            return false;
+                        }
+                    } else if (window.web3) {
+                        // Acccounts always exposed
+                        web3js = new Web3(web3.currentProvider);
+                        account = we3.eth.accounts[0]
+                    } else {
+                        console.log('Non-Ethereum browser detected. You should consider trying MetaMask!');
+                        return false
+                    }
+
+                    if (!account) {
+                        alert('please check you login status!');
+                        return false;
+                    }
+
+                    $('button#show').click(function () {
+                        $("div#result").html("<p>Checking if you have got the flag or not...</p>");
+                        $.get("checkflag", function (data) {
+                            flag = data['flag'];
+                            if (flag) {
+                                $("div#result").html("<p>You got the flag：" + flag + "</p>");
+                            } else {
+                                $("div#result").html("<p>" + data + "</p>");
+                            }
+                        })
+                    });
+
+
+                    $(document).on("click", "#deploy", function () {
+                        var code = $('input#code')[0].value;
+                        $("div#info").html("<p>Trying to get your own contract address...</p>");
+                        userAccount = account[0];
+                        if (code) {
+                            $.post("deploy", { code: code }, function (data) {
+                                contractAddress = data['address'];
+                                if (contractAddress) {
+                                    $("div#info").html("<input type=\"text\" class=\"form-control\" id=\"code\" placeholder=\"\"><div class=\"contractinfo\"><div id=\"infopanel\">just wating.</div><button type=\"button\" id=\"deploy\" class=\"redeploy btn btn-primary btn-lg\">redeploy</button></div>");
+                                    $.get("code", function (data) {
+                                        $("input#code")[0].placeholder = 'Code: md5(code)[:6] == ' + data['code'];
+                                    });
+                                    startApp(contractAddress);
+				    GetBalance();
+                                } else {
+                                    $("div#info").html("<p>" + data + "</p>");
+                                    setTimeout("checkContract()", 2000);
+                                }
+                            })
+                        }
+                        else {
+                            $("div#info").html("<p>Code Required.</p>");
+                            setTimeout("checkContract()", 2000);
+                        }
+                    });
+
+                    $('button#pay').click(function () {
+                        $("div#result").text("trying to pay for the flag...");
+                        if (contractAddress) {
+                            Bet2lossInstance.methods.PayForFlag().send({ from: userAccount })
+                                .on("receipt", function (receipt) {
+                                    $("div#result").text("You have bought the flag!");
+                                }).on("error", function (error) {
+                                    $("div#result").text("Fail to pay for the flag, you don't have enough B2GB...");
+                                }
+                                );
+                        } else {
+                            $("div#result").text("You must deploy your contract first.");
+                        }
+                    });
+
+                    checkContract();
+                    $('button#bet').click(function () {
+                        if (contractAddress) {
+                            $("div#result").text("loading...");
+                            $.get("random", function (data) {
+                                var commit = data['commit'];
+                                var gasPrice = data['gasPrice'];
+                                var commitLastBlock = data['commitLastBlock'];
+                                var r = data['signature']['r'];
+                                var s = data['signature']['s'];
+                                var v = data['signature']['v'];
+                                var modulo = $('input#modulo')[0].value;
+                                var wager = $('input#wager')[0].value;
+                                var betnumber = $('input#betnumber')[0].value;
+
+                                if (!modulo || !wager || !betnumber) {
+                                    alert("please, set modulo/wager/betnumber!!");
+                                    return false;
+                                }
+                                createTxns(modulo, wager, betnumber, commitLastBlock, commit, r, s, v, gasPrice);
+
+                            });
+                        } else {
+                            $("div#result").text("You must deploy your contract first.");
+                        }
+                    });
+                });
+
+
+            </script>
+        </div>
+</body>
+
+</html>

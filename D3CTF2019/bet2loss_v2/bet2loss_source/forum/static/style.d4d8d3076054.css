@@ -1,0 +1,96 @@
+.bord{
+    width:50%;
+    margin: 0 auto;
+    margin-top: 20px;
+    padding: 30px;
+    border-radius: 5px;
+    background-color: #ffffff;
+    border: 1px solid #d1d5da;
+    border-radius: 5px;
+}
+.redeploy{
+    margin-right: 0;
+    margin-left: 20px;
+}
+.bottom-panel{
+    position: relative;
+    width: 50%;
+    margin: 0 auto;
+    height: 360px;
+}
+.form{
+    position: absolute;
+    right: 0;
+    width: 30%;
+    margin-top: 40px;
+    height: 100%;
+}
+.contract{
+    position: absolute;
+    margin-top: 40px;
+    width: 60%;
+    height: 100%;
+}
+#info{
+    width: 100%;
+    height: 136px;
+    border-radius: 5px;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-bottom: 20px;
+    background-color: #f8f8f9;
+    display:flex;
+    display: -webkit-flex; 
+    align-items:center;
+    border: 1px solid #d1d5da;
+    justify-content: center;
+    word-break: break-all;
+    flex-direction: column;
+}
+.input-group{
+    margin-bottom: 10px;
+}
+
+#deploy{
+    margin-right: 20px;
+    height: 50px;
+}
+#result{
+    width: 100%;
+    height: 20%;
+    margin-top: 20px;
+    border: 1px solid #d1d5da;
+    border-radius: 5px;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-bottom: 20px;
+    background-color: #f8f8f9;
+    text-align: center;
+    display:flex;
+    display: -webkit-flex; 
+    align-items:center;
+    position: absolute;
+    bottom: 0;
+}
+#bet{
+    margin-top: 10px;
+}
+#logo{
+    max-height: 100px;
+}
+.logo{
+    text-align: center;
+    padding-top: 15px;
+}
+#code{
+    margin-bottom: 12px;
+}
+#infopanel{
+    font-size: 12px;
+    text-align: left;
+}
+#contractinfo{
+    display: flex;
+    align-items: center;
+    height: 50px;
+}

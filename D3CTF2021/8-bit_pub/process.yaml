@@ -1,0 +1,8 @@
+apps:
+  - name: 8-bit_pub
+    script: app.js
+    cwd: ./web
+    instances: max
+    exec_mode: cluster
+    watch: false
+    cron_restart: "*/3 * * * *"
