@@ -71,7 +71,7 @@ payload为：
 `{"to":"i@example.com","subject":"flag","attachments":[{"filename":"flag.txt","path":"/tmp/xxxx"}`
 这样也比较有趣
 
-另一种做法是安全员研究员posix提出的，对环境变量进行污染，以实现rce的做法:
+另一种做法是安全研究员posix提出的，对环境变量进行污染，以实现rce的做法:
 [https://blog.p6.is/Abusing-Environment-Variables/](https://blog.p6.is/Abusing-Environment-Variables/)
 
 阅读child_process的代码：https://github.com/nodejs/node/blob/master/lib/child_process.js#L502 可以发现，如果我们同时污染`shell`和`env`两个变量，就可以通过一些系统命令的环境变量来rce
