@@ -12,7 +12,8 @@ COPY web/ ${BASE_DIR}/web
 COPY process.yaml ${BASE_DIR}
 COPY flag readflag /
 
-RUN chmod 0777 -R ${BASE_DIR}/web/sessions \
+RUN mkdir ${BASE_DIR}/web/sessions \
+  && chmod 0777 -R ${BASE_DIR}/web/sessions \
   && chown root:root /flag /readflag \
   && chmod 000 /flag \
   && chmod 4001 /readflag \
